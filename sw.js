@@ -10,12 +10,12 @@ self.addEventListener('install', (event) => {
         './web_modules/lit-element.js',
         './web_modules/@vaadin/router.js',
         './web_modules/kv-storage-polyfill.js',
+        './web_modules/es-module-shims.js',
         './src/reddit-pwa-comment.js',
         './src/reddit-pwa-search.js',
         './src/reddit-pwa-subreddit.js',
         './src/reddit-pwa-thread.js',
-        './src/utils.js',
-        './node_modules/es-module-shims/dist/es-module-shims.js'
+        './src/utils.js'
       ]);
     })
   );
