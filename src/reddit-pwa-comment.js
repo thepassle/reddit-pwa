@@ -20,11 +20,19 @@ class RedditPwaComment extends LitElement {
         :host([depth~="2"]) {margin-left: 40px;}
         :host([depth~="3"]) {margin-left: 60px;}
         :host([depth~="4"]) {margin-left: 80px;}
-        :host([depth~="5"]) {margin-left: 100px;}
-        :host([depth~="6"]) {margin-left: 120px;}
-        :host([depth~="7"]) {margin-left: 140px;}
-        :host([depth~="8"]) {margin-left: 160px;}
-        :host([depth~="9"]) {margin-left: 180px;}
+
+        h2 {
+          word-break: break-word;
+          font-size: 1em;
+          font-weight: 600;
+          margin-bottom: 0.5em;
+        }
+
+        p {
+          word-break: break-word;
+          font-weight: 300;
+          margin-top: 0;
+        }
       `,
     ];
   }
@@ -32,9 +40,9 @@ class RedditPwaComment extends LitElement {
   render() {
     return html`
       <h2>
-        ${this.author}
+        ${this.author}:
       </h2>
-      <div>${this.body}</div>
+      <p>${this.body}</p>
 
       ${this.replies.map(comment => html`
         ${hasChildren(comment)

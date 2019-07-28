@@ -95,7 +95,7 @@ class RedditPwaApp extends LitElement {
   
   render() {
     return html`
-		<h1>Hello world!</h1>
+      <h1>Hello world!</h1>
     `;
   }
 }
@@ -109,14 +109,14 @@ We're off to a great start. Let's try and see how this looks in the browser so f
 
 Oh boy. 
 
-And we've barely even started. Alright, let's take a look. The problem here is that our module specifiers are _bare_. They are _bare module specifiers_. What this means is that there are no paths specified, no file extensions, they're just... bare. Our browser has no idea on what to do with this, so it'll throw an error.
+And we've barely even started. Alright, let's take a look. The problem here is that our module specifiers are _bare_. They are _bare module specifiers_. What this means is that there are no paths specified, no file extensions, they're just... pretty bare. Our browser has no idea on what to do with this, so it'll throw an error.
 
 > ```
-import { LitElement, html } from 'lit-element'; // <-- bare module specifier
-import { Router } from '@vaadin/router'; // <-- bare module specifier
+> import { LitElement, html } from 'lit-element'; // <-- bare module specifier
+> import { Router } from '@vaadin/router'; // <-- bare module specifier
 >
-import { foo } from './bar.js'; // <-- not bare!
-```
+> import { foo } from './bar.js'; // <-- not bare!
+> ```
 
 Naturally, we could use some tools for this, like webpack, or rollup, or a dev server that rewrites the bare module specifiers to something meaningful to browsers, so we can load our imports. But that means we have to bring in a bunch of tooling, dive into configuration, and we're trying to stay minimal here. We just want to write code! In order to solve this, we're going to take a look at [import maps](https://github.com/WICG/import-maps).
 
@@ -124,22 +124,22 @@ Import maps is a new proposal that lets you control the behavior of JavaScript i
 
 - Allow our bare module specifiers to work
 - Provide a fallback resolution so that `import $ from "jquery";` can try to go to a CDN first, but fall back to a local version if the CDN server is down
-- Enabling polyfilling of, or other control over, [built-in modules](https://github.com/tc39/proposal-javascript-standard-library/)
+- Enabling polyfilling of, or other control over, [built-in modules](https://github.com/tc39/proposal-javascript-standard-library/) (More on that later, hang on tight!)
 - Solve the [nested dependency problem](https://dev.to/open-wc/nested-dependencies-in-frontend-558c) (Go read that blog!)
 
 Sounds pretty sweet, no? Import maps are currently available in Chrome 75+, behind a flag, and with that knowledge in mind, let's go to our `index.html`, and add an import map to our `<head>`:
 
 ```html
-	<head>
-	    <script type="importmap">
-	      {
-	        "imports": {
-	          "@vaadin/router": "/web_modules/@vaadin/router.js",
-	          "lit-element": "/web_modules/lit-element.js"
-	        }
-	      }
-	    </script>
-    </head>
+  <head>
+    <script type="importmap">
+      {
+        "imports": {
+          "@vaadin/router": "/web_modules/@vaadin/router.js",
+          "lit-element": "/web_modules/lit-element.js"
+        }
+      }
+    </script>
+  </head>
 ```
 
 If we go back to our browser, and refresh our page, we'll have no more errors, and we should see our `<h1>Hello world!</h1>` on our screen.
@@ -186,7 +186,8 @@ self.addEventListener('install', (event) => {
         './src/reddit-pwa-comment.js',
         './src/reddit-pwa-search.js',
         './src/reddit-pwa-subreddit.js',
-        './src/reddit-pwa-thread.js'
+        './src/reddit-pwa-thread.js',
+        './src/utils.js',
       ]);
     })
   );
@@ -228,8 +229,8 @@ Pretty neat. We can perfectly use this for adding a 'save for offline' button, a
 
 ```js
 async saveForOffline() {
-	await savedPosts.set(this.location.params.id, this.thread);
-	this.isPostSaved = true;
+  await savedPosts.set(this.location.params.id, this.thread);
+  this.isPostSaved = true;
 }
 ```
 
@@ -245,7 +246,7 @@ First things first, lets install the kv-storage-polyfill:
 
 And lets add the following to our import map in our `index.html`:
 
-```
+```html
 <script type="importmap">
   {
     "imports": {
@@ -271,9 +272,9 @@ import { StorageArea } from '/web_modules/kv-storage-polyfill.js';
 This is what will happen:
 
 ```
-"/web_modules/kv-storage-polyfill.js": [       // when I'm requested
-	"std:kv-storage", 						   // try me first!
-	"/web_modules/kv-storage-polyfill.js"      // or fallback to me
+"/web_modules/kv-storage-polyfill.js": [     // when I'm requested
+  "std:kv-storage", 		             // try me first!
+  "/web_modules/kv-storage-polyfill.js"      // or fallback to me
 ]
 ```
 
@@ -294,3 +295,7 @@ To start: [Guy Bedford](https://twitter.com/guybedford), who wrote [es-module-sh
 
 And if you're interested in more of the same, you should definitely check out [Luke Jackson](https://twitter.com/lukejacksonn)'s talk [Don't Build That App!](https://www.youtube.com/watch?v=mVjZQrsXBQE) No webpack, no worries 🤓🤙, as Luke would say.
 
+
+# TO DO:
+
+browser/device support disclaimer

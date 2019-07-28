@@ -61,13 +61,38 @@ class RedditPwaThread extends LitElement {
 
   static get styles() {
     return css`
+      h1 {
+        font-size: 1.5em;
+        font-weight: 600;
+        text-transform: lowercase;
+        font-weight: 100;
+        margin-bottom: 2em;
+      }
+
+      button {
+        padding: 0px 10px;
+        height: 40px;
+        margin-bottom: 10px;
+        line-height: 40px;
+        text-decoration: none;
+        border-radius: 5px;
+        border: none;
+        font-size: 1em;
+      }
+
+      .save {
+        background-color: #0077ff;
+      }
+
+      .delete {
+        background-color: #ff6262;
+      }
     `
   }
 
   render() {
     if(!this.thread) return html``;
     return html`
-      <a href="/${this.location.params.subreddit}">Back</a>
       <h1>${this.title}</h1>
       ${this.isPostSaved
           ? html`<button class="delete" @click=${this.deleteFromStorage}>❌ Delete from storage</button>`

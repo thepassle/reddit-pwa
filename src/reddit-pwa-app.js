@@ -1,4 +1,4 @@
-import { LitElement, html } from 'lit-element';
+import { LitElement, html, css } from 'lit-element';
 import { Router } from '@vaadin/router';
 
 class RedditPwaApp extends LitElement {
@@ -34,6 +34,35 @@ class RedditPwaApp extends LitElement {
   render() { // eslint-disable-line
     return html`
       <div id="outlet"></div>
+      <a aria-label="Home" href="/">🏠</a>
+    `;
+  }
+
+  static get styles() {
+    return css`
+      #outlet {
+        display: block;
+        width: calc(100% - 20px);
+        height: calc(100% - 20px);
+        padding: 10px;
+        overflow: scroll;
+        background-color: #ededed;
+      }
+
+      a {
+        text-decoration: none;
+        box-shadow: 0px 3px 10px 0px rgba(0,0,0,0.5);
+        position: fixed;
+        background-color: #9b00ff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        bottom: 20px;
+        left: 20px;
+      }
     `;
   }
 }

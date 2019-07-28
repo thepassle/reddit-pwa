@@ -27,9 +27,11 @@ class RedditPwaSearch extends LitElement {
 
   render() {
     return html`
-      <label for="search">Find subreddit</label>
-      <input @input=${this.updateSubreddit} id="search" type="text" value="${this.subreddit}"/>
-      <a href="${this.subreddit}">🔎 Search!</a>
+      <div class="search-container">
+        <label for="search">Find subreddit</label>
+        <input @input=${this.updateSubreddit} id="search" type="text" value="${this.subreddit}"/>
+        <a href="${this.subreddit}">🔎 Search!</a>
+      </div>
       ${this.savedPosts.length > 0
         ? html`<p>Saved posts:</p>
           <ul>
@@ -49,6 +51,48 @@ class RedditPwaSearch extends LitElement {
 
   static get styles() {
     return css`
+      .search-container {
+        padding-top: 20vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .search-container a {
+        background-color: #0077ff;
+        color: white;
+        padding: 0px 10px;
+        height: 40px;
+        line-height: 40px;
+        text-decoration: none;
+        border-radius: 5px;
+      }
+
+      .search-container a:hover,
+      .search-container a:active,
+      .search-container a:focus {
+        text-decoration: underline;
+      }
+
+      a {
+        color: #0077ff;
+      }
+
+      input {
+        box-shadow: 0px 2px 4px 0px rgba(0,0,0,0.3);
+        margin: 10px 0px;
+        font-size: 1em;
+        width: 80%;
+        height: 40px;
+        border-radius: 10px;
+        border: none;
+        padding: 0px 10px;
+      }
+
+      input:active, input:focus, input:hover {
+        transition: box-shadow 0.3s ease-in-out;
+        box-shadow: 0px 3px 10px 0px rgba(0,0,0,0.5);
+      }
     `;
   }
 }

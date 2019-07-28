@@ -22,7 +22,7 @@ class RedditPwaSubreddit extends LitElement {
     return !this.posts
       ? html``
       : html`
-      <a href="/">Back</a>
+      <h1>${this.location.params.subreddit}</h1>
       <ul>
         ${this.posts.map(post => html`
           <li>
@@ -36,6 +36,33 @@ class RedditPwaSubreddit extends LitElement {
 
   static get styles() {
     return css`
+      h1 {
+        font-size: 1.5em;
+        font-weight: 600;
+        text-transform: lowercase;
+        font-weight: 100;
+        margin-bottom: 2em;
+      }
+
+      a {
+        color: #0077ff;
+      }
+
+      ul {
+        list-style: none;
+        padding-left: 0;
+      }
+
+      h2 {
+        margin-top: 1.5em;
+        margin-bottom: 0.25em;
+        font-size: 1em;
+        font-weight: 400;
+      }
+
+      span {
+        font-size: 0.75em;
+      }
     `;
   }
 }

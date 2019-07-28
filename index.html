@@ -17,20 +17,28 @@
         }
       }
     </script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        font-family: Helvetica, sans-serif;
+        font-size: 16px;
+      }
+    </style>
   </head>
   <body>
     <reddit-pwa-app></reddit-pwa-app>
     <script src="./src/reddit-pwa-app.js" type="module-shim"></script>
     <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').then(() => { // eslint-disable-line
-          console.log('ServiceWorker registered!');
-        }, (err) => {
-          console.log('ServiceWorker registration failed: ', err);
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js').then(() => { // eslint-disable-line
+            console.log('ServiceWorker registered!');
+          }, (err) => {
+            console.log('ServiceWorker registration failed: ', err);
+          });
         });
-      });
-    }
-  </script>
+      }
+    </script>
   </body>
 </html>
