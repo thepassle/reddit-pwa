@@ -42,6 +42,9 @@ class RedditPwaSubreddit extends LitElement {
         text-transform: lowercase;
         font-weight: 100;
         margin-bottom: 2em;
+        color: #6b6b6b;
+        text-decoration: underline;
+        text-decoration-color: rgb(0, 119, 255);
       }
 
       a {

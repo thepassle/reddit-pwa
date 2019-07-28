@@ -67,6 +67,9 @@ class RedditPwaThread extends LitElement {
         text-transform: lowercase;
         font-weight: 100;
         margin-bottom: 2em;
+        color: #6b6b6b;
+        text-decoration: underline;
+        text-decoration-color: rgb(0, 119, 255);
       }
 
       button {
@@ -78,6 +81,7 @@ class RedditPwaThread extends LitElement {
         border-radius: 5px;
         border: none;
         font-size: 1em;
+        color: white;
       }
 
       .save {
