@@ -14,7 +14,8 @@ self.addEventListener('install', (event) => {
         './src/reddit-pwa-search.js',
         './src/reddit-pwa-subreddit.js',
         './src/reddit-pwa-thread.js',
-        './src/utils.js'
+        './src/utils.js',
+        './node_modules/es-module-shims/dist/es-module-shims.js'
       ]);
     })
   );

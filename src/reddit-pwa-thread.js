@@ -1,5 +1,5 @@
 import { LitElement, html, css } from 'lit-element';
-import { StorageArea } from '/web_modules/kv-storage-polyfill.js';
+import { StorageArea } from 'std:kv-storage';
 
 import { hasChildren } from './utils.js';
 import './reddit-pwa-comment.js';

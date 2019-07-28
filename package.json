@@ -11,6 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "@vaadin/router": "^1.2.1",
+    "es-module-shims": "^0.2.14",
     "kv-storage-polyfill": "^1.1.0",
     "lit-element": "^2.1.0"
   },

@@ -1,15 +1,16 @@
 <html>
   <head>
     <title>Reddit PWA</title>
+    <script defer src="./node_modules/es-module-shims/dist/es-module-shims.js"></script>
     <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#0077ff"/>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script type="importmap">
+    <script type="importmap-shim">
       {
         "imports": {
           "@vaadin/router": "/web_modules/@vaadin/router.js",
           "lit-element": "/web_modules/lit-element.js",
-          "/web_modules/kv-storage-polyfill.js": [
+          "std:kv-storage": [
             "std:kv-storage",
             "/web_modules/kv-storage-polyfill.js"
           ]
@@ -19,7 +20,7 @@
   </head>
   <body>
     <reddit-pwa-app></reddit-pwa-app>
-    <script src="./src/reddit-pwa-app.js" type="module"></script>
+    <script src="./src/reddit-pwa-app.js" type="module-shim"></script>
     <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
