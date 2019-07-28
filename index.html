@@ -1,0 +1,32 @@
+<html>
+  <head>
+    <title>Reddit PWA</title>
+    <script type="importmap">
+      {
+        "imports": {
+          "@vaadin/router": "/web_modules/@vaadin/router.js",
+          "lit-element": "/web_modules/lit-element.js",
+          "/web_modules/kv-storage-polyfill.js": [
+            "std:kv-storage",
+            "/web_modules/kv-storage-polyfill.js"
+          ]
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <reddit-pwa-app></reddit-pwa-app>
+    <script src="./src/reddit-pwa-app.js" type="module"></script>
+    <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').then(() => { // eslint-disable-line
+          console.log('ServiceWorker registered!');
+        }, (err) => {
+          console.log('ServiceWorker registration failed: ', err);
+        });
+      });
+    }
+  </script>
+  </body>
+</html>

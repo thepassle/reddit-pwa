@@ -1,0 +1,21 @@
+{
+  "name": "reddit-pwa",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "es-dev-server --watch --open --port 9091",
+    "postinstall": "npx @pika/web"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@vaadin/router": "^1.2.1",
+    "kv-storage-polyfill": "^1.1.0",
+    "lit-element": "^2.1.0"
+  },
+  "devDependencies": {
+    "es-dev-server": "^1.8.2",
+    "http-server": "^0.11.1"
+  }
+}
