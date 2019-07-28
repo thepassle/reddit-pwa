@@ -40,14 +40,9 @@ class RedditPwaApp extends LitElement {
 
   static get styles() {
     return css`
-      #outlet {
+      /* #outlet {
         display: block;
-        width: calc(100% - 20px);
-        height: calc(100% - 20px);
-        padding: 10px;
-        overflow: scroll;
-        -webkit-overflow-scrolling: touch;
-      }
+      } */
 
       a {
         text-decoration: none;
