@@ -46,6 +46,7 @@ class RedditPwaApp extends LitElement {
         height: calc(100% - 20px);
         padding: 10px;
         overflow: scroll;
+        -webkit-overflow-scrolling: touch;
         background-color: #ededed;
       }
 

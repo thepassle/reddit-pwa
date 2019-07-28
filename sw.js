@@ -1,4 +1,4 @@
-const VERSION = 0;
+const VERSION = 2;
 const CACHENAME = `reddit-pwa-v${VERSION}`;
 
 self.addEventListener('install', (event) => {
