@@ -55,7 +55,7 @@ We'll also add a `postinstall` hook to our `package.json` that's going to run Pi
 
 ## 🐭 Pika
 
-Pika is a project by [Fred K. Schott](https://twitter.com/FredKSchott), that aims to bring that nostalgic, 2014 simplicity to 2019 web development. Fred is up to all sorts of awesome stuff, for one, he made [pika.dev](https://www.pika.dev/), which lets you easily search for modern JavaScript packages on npm. He also recently gave his talk [Reimagining the Registry](ttps://www.youtube.com/watch?v=2Wwx-lF5NhE) at DinosaurJS 2019, which I highly recommend you watch.
+Pika is a project by [Fred K. Schott](https://twitter.com/FredKSchott), that aims to bring that nostalgic, 2014 simplicity to 2019 web development. Fred is up to all sorts of awesome stuff, for one, he made [pika.dev](https://www.pika.dev/), which lets you easily search for modern JavaScript packages on npm. He also recently gave his talk [Reimagining the Registry](https://www.youtube.com/watch?v=2Wwx-lF5NhE) at DinosaurJS 2019, which I highly recommend you watch.
 
 `@pika/web` takes things even one step further. If we run `pika-web`, it'll install our dependencies as single javascript files to a new `web_modules/` directory. If your dependency exports an ES "module" entrypoint in its `package.json` manifest, Pika supports it. If you have any transitive dependencies, Pika will create separate chunks for any shared code among your dependencies. Easy peasy lemon squeezy.
 
