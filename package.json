@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "es-dev-server --watch --open --port 9091",
+    "start": "es-dev-server --watch --open --port 9093",
     "postinstall": "npx @pika/web"
   },
   "author": "",
