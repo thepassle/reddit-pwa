@@ -2,13 +2,14 @@
 
 Hi all 👋
 
-I'm in a long distance relationship, and this means that every few weeks I'm on a plane to England. Everytime I'm on that plane, I think about how nice it'd be to read some reddit posts. What I could do is find a reddit app that lets you cache posts for offline (im sure there is one out there), _or_ I could take the opportunity to write something myself and use some of the latest and greatest technologies and web standards! 
+I'm in a long distance relationship, and this means that every few weeks I'm on a plane to England. Everytime I'm on that plane, I think about how nice it'd be to read some reddit posts. What I could do is find a reddit app that lets you cache posts for offline (im sure there is one out there), _or_ I could take the opportunity to write something myself and use some of the latest and greatest technologies and web standards, and have some fun! 
 
-On top of that, there recently has been a lot of discussion around what I like to call "going buildless", which I think is a really fascinating and great recent development. 
+On top of that, there recently has been a lot of discussion around what I like to call "going buildless", which I think is a really fascinating and great recent development. And thats also exactly what this post is about; bringing fun to developing.
 
 I also like to imagine this blogpost as somewhat of an homage to a couple of really awesome people in the community who are making some really awesome things possible, as well as a showcase of some exciting new technologies and standards, and I'll be linking to all that good stuff as we move along.
 
-Do note that this won't be a step-by-step tutorial, but if you want to check out the code, you can find the finished project on [github]().
+Do note that this won't be a step-by-step tutorial, but if you want to check out the code, you can find the finished project on [github](). Our end result should look something like this:
+![app](app.png)
 
 So let's dive straight in and quickly install _a few_ dependencies:
 
