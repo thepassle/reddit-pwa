@@ -145,7 +145,7 @@ Sounds pretty sweet, no? Import maps are currently available in Chrome 75+, behi
 
 If we go back to our browser, and refresh our page, we'll have no more errors, and we should see our `<h1>Hello world!</h1>` on our screen.
 
-## 📡 Service worker
+## 📡 Service Worker
 
 Alright, we're going to skip ahead in time a little bit. We've got our dependencies working, we have our router set up, and we've done some API calls to get the data from reddit, and display it on our screen. Going over all of the code is a bit out of scope for this blogpost, but remember that you can find all the code in the [github repo]() if you want to read the implementation details.
 
@@ -201,13 +201,13 @@ You'll find that we're totally in control of our assets, and we have a nice, cle
 
 Right. Now that we've cached our assets to work offline, it would be excellent if we could actually save some posts that we can read while offline. There are many ways that lead to Rome, but since we're living on the edge a little bit, we're going to go with: Kv-storage!
 
-### 📦 Built-in modules
+### 📦 Built-in Modules
 
 There are a few things to talk about here. Kv-storage is a [_built-in module_](https://developers.google.com/web/updates/2019/03/kv-storage#what_are_built-in_modules). Built-in modules are very similar to regular JavaScript modules, except they ship with the browser. It's good to note that while built-in modules ship with the browser, they are _not_ exposed on the global scope, and are namespaced with `std:` (Yes, really.). This has a few advantages: they won't add any overhead to starting up a new JavaScript runtime context (e.g. a new tab, worker, or service worker), and they won't consume any memory or CPU unless they're actually imported, as well as avoid naming collisions with existing code.
 
 Another interesting, if not somewhat controversial, proposal as a built-in module is the [std-toast](https://github.com/jackbsteinberg/std-toast) element, and the [std-switch](https://github.com/tkent-google/std-switch/blob/master/README.md) element.
 
-### 🗃 Kv-storage
+### 🗃 Kv-storage
 
 Alright, with that out of the way, lets talk about [kv-storage](https://github.com/WICG/kv-storage). Kv-storage (or "_key value_ storage") is fairly similar to localStorage, except for only a few **major** differences, and is layered on top of IndexedDB.
 
@@ -279,7 +279,7 @@ This is what will happen:
 ]
 ```
 
-## 🎉 Concluding
+## 🎉 Conclusion
 
 And we should now have a simple, functioning PWA, with minimal dependencies. There are a few nitpicks to this project that we could complain about, and they'd all likely be fair. For example; we probably could've gone without using Pika, but it does make life really easy for us. You could have made the same argument about adding a simple Webpack configuration, but you'd have missed the point. The point here is to make a fun application, while using some of the latest features, drop some buzzwords, and have a low barrier for entry. As Fred Schott would say: "In 2019, you should use a bundler because you want to, not because you need to."
 
@@ -287,7 +287,7 @@ If you're interested in nitpicking, however, you can read [this great discussion
 
 I hope you enjoyed this blog post, and I hope you learned something, or discovered some new interesting people to follow. There are lots of exciting developments happening in this space right now, and I hope I got you as excited about them as I am. If you have any questions, comments, feedback, or nitpicks, feel free to reach out to me on twitter at [@passle_](https://twitter.com/passle_).
 
-## Honorable mentions
+## Honorable Mentions
 
 To close this blog, I'd like to give a few shoutouts to some very interesting people that are doing some great stuff, and you may want to keep an eye on.
 
