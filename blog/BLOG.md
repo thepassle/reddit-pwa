@@ -281,7 +281,7 @@ This is what will happen:
 
 ## 🎉 Concluding
 
-And we should now have a simple, functioning PWA, with minimal dependencies. There are a few nitpicks to this project that we could complain about, and they'd all likely be fair. For example; we probably could've gone without using Pika, but it does make live really easy for us. You could have made the same argument about adding a simple Webpack configuration, but you'd have missed the point. The point here is to make a fun application, while using some of the latest features, drop some buzzwords, and have a low barrier for entry. As Fred Schott would say: "In 2019, you should use a bundler because you want to, not because you need to."
+And we should now have a simple, functioning PWA, with minimal dependencies. There are a few nitpicks to this project that we could complain about, and they'd all likely be fair. For example; we probably could've gone without using Pika, but it does make life really easy for us. You could have made the same argument about adding a simple Webpack configuration, but you'd have missed the point. The point here is to make a fun application, while using some of the latest features, drop some buzzwords, and have a low barrier for entry. As Fred Schott would say: "In 2019, you should use a bundler because you want to, not because you need to."
 
 If you're interested in nitpicking, however, you can read [this great discussion](https://github.com/lukejacksonn/perflink/issues/15) about using Webpack vs Pika vs buildless, and you'll get some great insights from [Sean Larkinn](https://twitter.com/TheLarkInn) of the Webpack core team himself, as well as [Fred K. Schott](https://twitter.com/FredKSchott), creator of Pika.
 
