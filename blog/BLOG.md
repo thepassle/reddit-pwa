@@ -53,7 +53,7 @@ We'll also add a `postinstall` hook to our `package.json` that's going to run Pi
   }
 ```
 
-## 🐭 Pika
+## 🐭 Pika
 
 Pika is a project by [Fred K. Schott](https://twitter.com/FredKSchott), that aims to bring that nostalgic, 2014 simplicity to 2019 web development. Fred is up to all sorts of awesome stuff, for one, he made [pika.dev](https://www.pika.dev/), which lets you easily search for modern JavaScript packages on npm. He also recently gave his talk [Reimagining the Registry](ttps://www.youtube.com/watch?v=2Wwx-lF5NhE) at DinosaurJS 2019, which I highly recommend you watch.
 

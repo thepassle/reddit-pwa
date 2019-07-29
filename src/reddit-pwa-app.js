@@ -46,6 +46,7 @@ class RedditPwaApp extends LitElement {
 
       a {
         text-decoration: none;
+        -webkit-box-shadow: 0px 3px 10px 0px rgba(0,0,0,0.5);
         box-shadow: 0px 3px 10px 0px rgba(0,0,0,0.5);
         position: fixed;
         background-color: #9b00ff;
