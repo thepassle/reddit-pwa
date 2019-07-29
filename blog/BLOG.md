@@ -230,8 +230,12 @@ Pretty neat. We can perfectly use this for adding a 'save for offline' button, a
 `reddit-pwa-thread.js:52`:
 
 ```js
+const savedPosts = new StorageArea("saved-posts");
+
+// ...
+
 async saveForOffline() {
-  await savedPosts.set(this.location.params.id, this.thread);
+  await savedPosts.set(this.location.params.id, this.thread); // id of the post + thread as json
   this.isPostSaved = true;
 }
 ```
