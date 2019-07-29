@@ -295,8 +295,3 @@ To start: [Guy Bedford](https://twitter.com/guybedford), who wrote [es-module-sh
 ), which, well, shims es modules. Which if you ask me is quite an amazing feat, and allows modules and import maps to work all the way down to IE11.
 
 And if you're interested in more of the same, you should definitely check out [Luke Jackson](https://twitter.com/lukejacksonn)'s talk [Don't Build That App!](https://www.youtube.com/watch?v=mVjZQrsXBQE) No webpack, no worries 🤓🤙, as Luke would say.
-
-
-# TO DO:
-
-browser/device support disclaimer
