@@ -240,6 +240,14 @@ async saveForOffline() {
 }
 ```
 
+So now if we click the 'save for offline' button, and we go to the developer tools 'Application' tab, we can see a `kv-storage:saved-posts` that holds the JSON data for this post:
+
+![save](save.png)
+
+And if we go back to our search page, we'll have a list of saved posts with the post we just saved:
+
+![saved](saved.png)
+
 ### 🔮 Polyfilling
 
 Excellent. However, we're about to run into another problem here. Living on the edge is fun, but also dangerous. The problem that we're hitting here is that, at the time of writing, kv-storage is only implemented in Chrome behind a flag. That's obviously not great. Fortunately, there's a polyfill available, and at the same time we get to show off yet another really useful feature of import-maps; polyfilling!
