@@ -223,7 +223,7 @@ import { storage, /* StorageArea */ } from "std:kv-storage";
 })();
 ```
 
-> Notice how we're importing from `std:kv-storage`?
+> Notice how we're importing from `std:kv-storage`? This import specifier is bare as well, but in this case it's okay because it actually ships with the browser.
 
 Pretty neat. We can perfectly use this for adding a 'save for offline' button, and simply store the JSON data for a reddit thread, and get it when we need it.
 
