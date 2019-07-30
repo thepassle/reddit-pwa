@@ -145,6 +145,8 @@ Sounds pretty sweet, no? Import maps are currently available in Chrome 75+, behi
 
 If we go back to our browser, and refresh our page, we'll have no more errors, and we should see our `<h1>Hello world!</h1>` on our screen.
 
+Import maps is an incredibly interesting new standard, and definitely something you should be keeping your eyes on. If you're interested in experimenting with them, and generate your own import map based on a `yarn.lock` file, you can try our [import-maps-generate](https://github.com/open-wc/open-wc/tree/master/packages/import-maps-generate) package and play around. Im really excited to see what people will develop in combination with import maps.
+
 ## 📡 Service Worker
 
 Alright, we're going to skip ahead in time a little bit. We've got our dependencies working, we have our router set up, and we've done some API calls to get the data from reddit, and display it on our screen. Going over all of the code is a bit out of scope for this blogpost, but remember that you can find all the code in the [github repo]() if you want to read the implementation details.
