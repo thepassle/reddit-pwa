@@ -304,6 +304,8 @@ I hope you enjoyed this blog post, and I hope you learned something, or discover
 To close this blog, I'd like to give a few shoutouts to some very interesting people that are doing some great stuff, and you may want to keep an eye on.
 
 To start: [Guy Bedford](https://twitter.com/guybedford), who wrote [es-module-shims](https://github.com/guybedford/es-module-shims
-), which, well, shims es modules. Which if you ask me is quite an amazing feat, and allows me to actually use some of these new technologies that aren't implemented on all browsers yet. 
+), which, well, shims es modules, and import maps. Which if you ask me is quite an amazing feat, and allows me to actually use some of these new technologies that aren't implemented on all browsers yet. 
 
 And if you're interested in more of the same, you should definitely check out [Luke Jackson](https://twitter.com/lukejacksonn)'s talk [Don't Build That App!](https://www.youtube.com/watch?v=mVjZQrsXBQE) No webpack, no worries 🤓🤙, as Luke would say.
+
+I'd also like to thank [Benny Powers](https://twitter.com/PowersBenny) and [Lars den Bakker](http://github.com/larsdenbakker) for their helpful comments and feedback.
