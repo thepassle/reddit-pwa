@@ -31,7 +31,7 @@ What we _will_ be using is:
   Pika is going to help us get our modules together for easy development.
   
 - [`es-dev-server`](https://open-wc.org/developing/es-dev-server.html)
-  A simple dev server for modern web development workflows. Although any http server will do; feel free to bring your own.
+  A simple dev server for modern web development workflows, made by us at [open-wc](https://www.open-wc.org). Although any http server will do; feel free to bring your own.
 
 And that's it. We'll also be using a few browser standards, namely: [es modules](https://hacks.mozilla.org/2018/03/es-modules-a-cartoon-deep-dive/), [web components](https://developer.mozilla.org/en-US/docs/Web/Web_Components), [import-maps](https://github.com/WICG/import-maps), [kv-storage](https://github.com/WICG/kv-storage) and [service-worker](https://developers.google.com/web/fundamentals/primers/service-workers/).
 
@@ -145,7 +145,7 @@ Sounds pretty sweet, no? Import maps are currently available in Chrome 75+, behi
 
 If we go back to our browser, and refresh our page, we'll have no more errors, and we should see our `<h1>Hello world!</h1>` on our screen.
 
-Import maps is an incredibly interesting new standard, and definitely something you should be keeping your eyes on. If you're interested in experimenting with them, and generate your own import map based on a `yarn.lock` file, you can try our [import-maps-generate](https://github.com/open-wc/open-wc/tree/master/packages/import-maps-generate) package and play around. Im really excited to see what people will develop in combination with import maps.
+Import maps is an incredibly interesting new standard, and definitely something you should be keeping your eyes on. If you're interested in experimenting with them, and generate your own import map based on a `yarn.lock` file, you can try our [open-wc](https://www.open-wc.org) [import-maps-generate](https://github.com/open-wc/open-wc/tree/master/packages/import-maps-generate) package and play around. Im really excited to see what people will develop in combination with import maps.
 
 ## 📡 Service Worker
 
