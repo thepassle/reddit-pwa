@@ -19,8 +19,6 @@ npm i @babel/core babel-loader @babel/preset-env @babel/preset-react webpack web
 
 I'm kidding. We're not gonna use any of that. We're going to try and avoid as much tooling as we can, and keep the entry barrier low.
 
-Sorry.
-
 What we _will_ be using is:
 
 - [`LitElement`](https://github.com/polymer/lit-element)
@@ -35,7 +33,7 @@ What we _will_ be using is:
 - [`es-dev-server`](https://open-wc.org/developing/es-dev-server.html)
   A simple dev server for modern web development workflows. Although any http server will do; feel free to bring your own.
 
-And that's it. We'll also be using a few cutting edge browser standards, namely: [es modules](https://hacks.mozilla.org/2018/03/es-modules-a-cartoon-deep-dive/), [web components](https://developer.mozilla.org/en-US/docs/Web/Web_Components), [import-maps](https://github.com/WICG/import-maps), [kv-storage](https://github.com/WICG/kv-storage) and [service-worker](https://developers.google.com/web/fundamentals/primers/service-workers/).
+And that's it. We'll also be using a few browser standards, namely: [es modules](https://hacks.mozilla.org/2018/03/es-modules-a-cartoon-deep-dive/), [web components](https://developer.mozilla.org/en-US/docs/Web/Web_Components), [import-maps](https://github.com/WICG/import-maps), [kv-storage](https://github.com/WICG/kv-storage) and [service-worker](https://developers.google.com/web/fundamentals/primers/service-workers/).
 
 So let's go ahead and install our dependencies:
 
@@ -118,16 +116,17 @@ And we've barely even started. Alright, let's take a look. The problem here is t
 > import { Router } from '@vaadin/router'; // <-- bare module specifier
 >
 > import { foo } from './bar.js'; // <-- not bare!
+> import { html } from 'https://unpkg.com/lit-html'; // <-- not bare!
 > ```
 
 Naturally, we could use some tools for this, like webpack, or rollup, or a dev server that rewrites the bare module specifiers to something meaningful to browsers, so we can load our imports. But that means we have to bring in a bunch of tooling, dive into configuration, and we're trying to stay minimal here. We just want to write code! In order to solve this, we're going to take a look at [import maps](https://github.com/WICG/import-maps).
 
-Import maps is a new proposal that lets you control the behavior of JavaScript imports. Using an import map, we can control what URLs get fetched by JavaScript `import` statements and `import()` expressions, and allows this mapping to be reused in non-import contexts. This is great for several reasons, because we can use this to:
+Import maps is a new proposal that lets you control the behavior of JavaScript imports. Using an import map, we can control what URLs get fetched by JavaScript `import` statements and `import()` expressions, and allows this mapping to be reused in non-import contexts. This is great for several reasons:
 
-- Allow our bare module specifiers to work
-- Provide a fallback resolution so that `import $ from "jquery";` can try to go to a CDN first, but fall back to a local version if the CDN server is down
-- Enabling polyfilling of, or other control over, [built-in modules](https://github.com/tc39/proposal-javascript-standard-library/) (More on that later, hang on tight!)
-- Solve the [nested dependency problem](https://dev.to/open-wc/nested-dependencies-in-frontend-558c) (Go read that blog!)
+- Allows our bare module specifiers to work
+- Provides a fallback resolution so that `import $ from "jquery";` can try to go to a CDN first, but fall back to a local version if the CDN server is down
+- Enables polyfilling of, or other control over, [built-in modules](https://github.com/tc39/proposal-javascript-standard-library/) (More on that later, hang on tight!)
+- Solves the [nested dependency problem](https://dev.to/open-wc/nested-dependencies-in-frontend-558c) (Go read that blog!)
 
 Sounds pretty sweet, no? Import maps are currently available in Chrome 75+, behind a flag, and with that knowledge in mind, let's go to our `index.html`, and add an import map to our `<head>`:
 
