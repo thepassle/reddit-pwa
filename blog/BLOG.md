@@ -299,7 +299,7 @@ And we should now have a simple, functioning PWA, with minimal dependencies. The
 
 If you're interested in nitpicking, however, you can read [this great discussion](https://github.com/lukejacksonn/perflink/issues/15) about using Webpack vs Pika vs buildless, and you'll get some great insights from [Sean Larkinn](https://twitter.com/TheLarkInn) of the Webpack core team himself, as well as [Fred K. Schott](https://twitter.com/FredKSchott), creator of Pika.
 
-I hope you enjoyed this blog post, and I hope you learned something, or discovered some new interesting people to follow. There are lots of exciting developments happening in this space right now, and I hope I got you as excited about them as I am. If you have any questions, comments, feedback, or nitpicks, feel free to reach out to me on twitter at [@passle_](https://twitter.com/passle_).
+I hope you enjoyed this blog post, and I hope you learned something, or discovered some new interesting people to follow. There are lots of exciting developments happening in this space right now, and I hope I got you as excited about them as I am. If you have any questions, comments, feedback, or nitpicks, feel free to reach out to me on twitter at [@passle_](https://twitter.com/passle_) or [@openwc](https://twitter.com/openwc) and don't forget to check out [open-wc.org](https://www.open-wc.org) 😉.
 
 ## Honorable Mentions
 
