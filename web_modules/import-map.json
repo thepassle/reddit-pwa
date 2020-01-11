@@ -1,0 +1,8 @@
+{
+  "imports": {
+    "lit-element": "./lit-element.js",
+    "@vaadin/router": "./@vaadin/router.js",
+    "es-module-shims": "./es-module-shims.js",
+    "kv-storage-polyfill": "./kv-storage-polyfill.js"
+  }
+}

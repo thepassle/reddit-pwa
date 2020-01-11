@@ -1,10 +1,43 @@
-/* ES Module Shims 0.2.14 */
+/* ES Module Shims 0.4.5 */
 (function () {
-  'use strict';
+
+  const resolvedPromise = Promise.resolve();
 
   let baseUrl;
 
-  if (typeof document !== 'undefined') {
+  function createBlob (source) {
+    return URL.createObjectURL(new Blob([source], { type: 'application/javascript' }));
+  }
+
+  const hasDocument = typeof document !== 'undefined';
+
+  // support browsers without dynamic import support (eg Firefox 6x)
+  let dynamicImport;
+  try {
+    dynamicImport = (0, eval)('u=>import(u)');
+  }
+  catch (e) {
+    if (hasDocument) {
+      self.addEventListener('error', e => importShim.e = e.error);
+      dynamicImport = blobUrl => {
+        const topLevelBlobUrl = createBlob(
+          `import*as m from'${blobUrl}';self.importShim.l=m;self.importShim.e=null`
+        );
+        const s = document.createElement('script');
+        s.type = 'module';
+        s.src = topLevelBlobUrl;
+        document.head.appendChild(s);
+        return new Promise((resolve, reject) => {
+          s.addEventListener('load', () => {
+            document.head.removeChild(s);
+            importShim.e ? reject(importShim.e) : resolve(importShim.l, baseUrl);
+          });
+        });
+      };
+    }
+  }
+
+  if (hasDocument) {
     const baseEl = document.querySelector('base[href]');
     if (baseEl)
       baseUrl = baseEl.href;
@@ -18,7 +51,7 @@
   }
 
   let esModuleShimsSrc;
-  if (typeof document !== 'undefined') {
+  if (hasDocument) {
     esModuleShimsSrc = document.currentScript && document.currentScript.src;
   }
 
@@ -112,40 +145,57 @@
    * and then match based on backtracked hash lookups
    *
    */
+  const emptyImportMap = { imports: {}, scopes: {} };
 
   function resolveUrl (relUrl, parentUrl) {
-    return resolveIfNotPlainOrUrl(relUrl, parentUrl) ||
-        relUrl.indexOf(':') !== -1 && relUrl ||
-        resolveIfNotPlainOrUrl('./' + relUrl, parentUrl);
+    return resolveIfNotPlainOrUrl(relUrl, parentUrl) || (relUrl.indexOf(':') !== -1 ? relUrl : resolveIfNotPlainOrUrl('./' + relUrl, parentUrl));
   }
 
-  function resolvePackages(pkgs) {
-    var outPkgs = {};
-    for (var p in pkgs) {
-      var value = pkgs[p];
-      // TODO package fallback support
-      if (Array.isArray(value))
-        value = value.find(v => !v.startsWith('std:'));
-      if (typeof value === 'string')
-        outPkgs[resolveIfNotPlainOrUrl(p) || p] = value;
+  async function hasStdModule (name) {
+    try {
+      await dynamicImport(name);
+      return true;
     }
-    return outPkgs;
+    catch (e) {
+      return false;
+    }
   }
 
-  function parseImportMap (json, baseUrl) {
-    const imports = resolvePackages(json.imports) || {};
-    const scopes = {};
-    if (json.scopes) {
-      for (let scopeName in json.scopes) {
-        const scope = json.scopes[scopeName];
-        let resolvedScopeName = resolveUrl(scopeName, baseUrl);
-        if (resolvedScopeName[resolvedScopeName.length - 1] !== '/')
-          resolvedScopeName += '/';
-        scopes[resolvedScopeName] = resolvePackages(scope) || {};
+  async function resolveAndComposePackages (packages, outPackages, baseUrl, parentMap, parentUrl) {
+    outer: for (let p in packages) {
+      const resolvedLhs = resolveIfNotPlainOrUrl(p, baseUrl) || p;
+      let target = packages[p];
+      if (typeof target === 'string')
+        target = [target];
+      else if (!Array.isArray(target))
+        continue;
+
+      for (const rhs of target) {
+        if (typeof rhs !== 'string')
+          continue;
+        const mapped = resolveImportMap(parentMap, resolveIfNotPlainOrUrl(rhs, baseUrl) || rhs, parentUrl);
+        if (mapped && (!mapped.startsWith('std:') || await hasStdModule(mapped))) {
+          outPackages[resolvedLhs] = mapped;
+          continue outer;
+        }
       }
+      targetWarning(p, packages[p], 'bare specifier did not resolve');
     }
+  }
 
-    return { imports: imports, scopes: scopes, baseUrl: baseUrl };
+  async function resolveAndComposeImportMap (json, baseUrl, parentMap) {
+    const outMap = { imports: Object.assign({}, parentMap.imports), scopes: Object.assign({}, parentMap.scopes) };
+
+    if (json.imports)
+      await resolveAndComposePackages(json.imports, outMap.imports, baseUrl, parentMap, null);
+
+    if (json.scopes)
+      for (let s in json.scopes) {
+        const resolvedScope = resolveUrl(s, baseUrl);
+        await resolveAndComposePackages(json.scopes[s], outMap.scopes[resolvedScope] || (outMap.scopes[resolvedScope] = {}), baseUrl, parentMap, resolvedScope);
+      }
+
+    return outMap;
   }
 
   function getMatch (path, matchObj) {
@@ -159,554 +209,35 @@
     } while ((sepIndex = path.lastIndexOf('/', sepIndex - 1)) !== -1)
   }
 
-  function applyPackages (id, packages, baseUrl) {
+  function applyPackages (id, packages) {
     const pkgName = getMatch(id, packages);
     if (pkgName) {
       const pkg = packages[pkgName];
-      if (pkg === null)
-
+      if (pkg === null) return;
       if (id.length > pkgName.length && pkg[pkg.length - 1] !== '/')
-        console.warn("Invalid package target " + pkg + " for '" + pkgName + "' should have a trailing '/'.");
-      return resolveUrl(pkg + id.slice(pkgName.length), baseUrl);
+        targetWarning(pkgName, pkg, "should have a trailing '/'");
+      else
+        return pkg + id.slice(pkgName.length);
     }
   }
 
-  const protocolre = /^[a-z][a-z0-9.+-]*\:/i;
-  function resolveImportMap (id, parentUrl, importMap) {
-    const urlResolved = resolveIfNotPlainOrUrl(id, parentUrl) || id.indexOf(':') !== -1 && id;
-    if (urlResolved){
-      id = urlResolved;
-    } else if (protocolre.test(id)) { // non-relative URL with protocol
-      return id;
-    }
-    const scopeName = importMap.scopes && getMatch(parentUrl, importMap.scopes);
-    if (scopeName) {
-      const scopePackages = importMap.scopes[scopeName];
-      const packageResolution = applyPackages(id, scopePackages, scopeName);
+  function targetWarning (match, target, msg) {
+    console.warn("Package target " + msg + ", resolving target '" + target + "' for " + match);
+  }
+
+  function resolveImportMap (importMap, resolvedOrPlain, parentUrl) {
+    let scopeUrl = parentUrl && getMatch(parentUrl, importMap.scopes);
+    while (scopeUrl) {
+      const packageResolution = applyPackages(resolvedOrPlain, importMap.scopes[scopeUrl]);
       if (packageResolution)
         return packageResolution;
+      scopeUrl = getMatch(scopeUrl.slice(0, scopeUrl.lastIndexOf('/')), importMap.scopes);
     }
-    return importMap.imports && applyPackages(id, importMap.imports, importMap.baseUrl) || urlResolved || throwBare(id, parentUrl);
+    return applyPackages(resolvedOrPlain, importMap.imports) || resolvedOrPlain.indexOf(':') !== -1 && resolvedOrPlain;
   }
 
-  function throwBare (id, parentUrl) {
-    throw new Error('Unable to resolve bare specifier "' + id + (parentUrl ? '" from ' + parentUrl : '"'));
-  }
-
-  function createBlob (source) {
-    return URL.createObjectURL(new Blob([source], { type: 'application/javascript' }));
-  }
-
-  function analyzeModuleSyntax (_str) {
-    str = _str;
-    let err = null;
-    try {
-      baseParse();
-    }
-    catch (e) {
-      err = e;
-    }
-    return [oImports, oExports, err];
-  }
-
-  // State:
-  // (for perf, works because this runs sync)
-  let i, charCode, str,
-    lastTokenIndex,
-    lastOpenTokenIndex,
-    lastTokenIndexStack,
-    dynamicImportStack,
-    braceDepth,
-    templateDepth,
-    templateStack,
-    oImports,
-    oExports;
-
-  function baseParse () {
-    lastTokenIndex = lastOpenTokenIndex = -1;
-    oImports = [];
-    oExports = [];
-    braceDepth = 0;
-    templateDepth = 0;
-    templateStack = [];
-    lastTokenIndexStack = [];
-    dynamicImportStack = [];
-    i = -1;
-
-    /*
-     * This is just the simple loop:
-     *
-     * while (charCode = str.charCodeAt(++i)) {
-     *   // reads into the first non-ws / comment token
-     *   commentWhitespace();
-     *   // reads one token at a time
-     *   parseNext();
-     *   // stores the last (non ws/comment) token for division operator backtracking checks
-     *   // (including on lastTokenIndexStack as we nest structures)
-     *   lastTokenIndex = i;
-     * }
-     *
-     * Optimized by:
-     * - Inlining comment whitespace to avoid repeated "/" checks (minor perf saving)
-     * - Inlining the division operator check from "parseNext" into this loop
-     * - Having "regularExpression()" start on the initial index (different to other parse functions)
-     */
-    while (charCode = str.charCodeAt(++i)) {
-      // reads into the first non-ws / comment token
-      if (isBrOrWs(charCode))
-        continue;
-      if (charCode === 47/*/*/) {
-        charCode = str.charCodeAt(++i);
-        if (charCode === 47/*/*/)
-          lineComment();
-        else if (charCode === 42/***/)
-          blockComment();
-        else {
-          /*
-           * Division / regex ambiguity handling
-           * based on checking backtrack analysis of:
-           * - what token came previously (lastTokenIndex)
-           * - what token came before the opening paren or brace (lastOpenTokenIndex)
-           *
-           * Only known unhandled ambiguities are cases of regexes immediately followed
-           * by division, another regex or brace:
-           *
-           * /regex/ / x
-           *
-           * /regex/
-           * {}
-           * /regex/
-           *
-           * And those cases only show errors when containing "'/` in the regex
-           *
-           * Could be fixed tracking stack of last regex, but doesn't seem worth it, and bad for perf
-           */
-          const lastTokenCode = str.charCodeAt(lastTokenIndex);
-          if (!lastTokenCode || isExpressionKeyword(lastTokenIndex) ||
-              isExpressionPunctuator(lastTokenCode) ||
-              lastTokenCode === 41/*)*/ && isParenKeyword(lastOpenTokenIndex) ||
-              lastTokenCode === 125/*}*/ && isExpressionTerminator(lastOpenTokenIndex)) {
-            // TODO: perf improvement
-            // it may be possible to precompute isParenKeyword and isExpressionTerminator checks
-            // when they are added to the token stack, not here
-            // this way we only need to store a stack of "regexTokenDepthStack" and "regexTokenDepth"
-            // where depth is the combined brace and paren depth count
-            // when leaving a brace or paren, this stack would be cleared automatically (if a match)
-            // this check then becomes curDepth === regexTokenDepth for the lastTokenCode )|} case
-            regularExpression();
-          }
-          lastTokenIndex = i;
-        }
-      }
-      else {
-        parseNext();
-        lastTokenIndex = i;
-      }
-    }
-    if (braceDepth || templateDepth || lastTokenIndexStack.length)
-      syntaxError();
-  }
-
-  function parseNext () {
-    switch (charCode) {
-      case 123/*{*/:
-        // dynamic import followed by { is not a dynamic import (so remove)
-        // this is a sneaky way to get around { import () {} } v { import () } block / object ambiguity without a parser (assuming source is valid)
-        if (oImports.length && oImports[oImports.length - 1].d === lastTokenIndex) {
-          oImports.pop();
-        }
-        braceDepth++;
-      // fallthrough
-      case 40/*(*/:
-        lastTokenIndexStack.push(lastTokenIndex);
-        return;
-
-      case 125/*}*/:
-        if (braceDepth-- === templateDepth) {
-          templateDepth = templateStack.pop();
-          templateString();
-          return;
-        }
-        if (braceDepth < templateDepth)
-          syntaxError();
-      // fallthrough
-      case 41/*)*/:
-        if (!lastTokenIndexStack)
-          syntaxError();
-        lastOpenTokenIndex = lastTokenIndexStack.pop();
-        if (dynamicImportStack.length && lastOpenTokenIndex == dynamicImportStack[dynamicImportStack.length - 1]) {
-          for (let j = 0; j < oImports.length; j++)
-            if (oImports[j].s === lastOpenTokenIndex) {
-              oImports[j].d = i;
-              break;
-            }
-          dynamicImportStack.pop();
-        }
-        return;
-
-      case 39/*'*/:
-        singleQuoteString();
-        return;
-      case 34/*"*/:
-        doubleQuoteString();
-        return;
-
-      case 96/*`*/:
-        templateString();
-        return;
-
-      case 105/*i*/: {
-        if (readPrecedingKeyword(i + 5) !== 'import') return;
-        const start = i;
-        charCode = str.charCodeAt(i += 6);
-        if (readToWsOrPunctuator(i) !== '' && charCode !== 46/*.*/ && charCode !== 34/*"*/ && charCode !== 39/*'*/)
-          return;
-        commentWhitespace();
-        switch (charCode) {
-          // dynamic import
-          case 40/*(*/:
-            lastTokenIndexStack.push(start);
-            if (str.charCodeAt(lastTokenIndex) === 46/*.*/)
-              return;
-            // dynamic import indicated by positive d, which will be set to closing paren index
-            dynamicImportStack.push(start);
-            oImports.push({ s: start, e: i + 1, d: undefined });
-            return;
-          // import.meta
-          case 46/*.*/:
-            charCode = str.charCodeAt(++i);
-            commentWhitespace();
-            // import.meta indicated by d === -2
-            if (readToWsOrPunctuator(i) === 'meta' && str.charCodeAt(lastTokenIndex) !== 46/*.*/)
-              oImports.push({ s: start, e: i + 4, d: -2 });
-            return;
-        }
-        // import statement (only permitted at base-level)
-        if (lastTokenIndexStack.length === 0) {
-          readSourceString();
-          return;
-        }
-      }
-
-      case 101/*e*/: {
-        if (lastTokenIndexStack.length !== 0 || readPrecedingKeyword(i + 5) !== 'export' || readToWsOrPunctuator(i + 6) !== '')
-          return;
-
-        let name;
-        charCode = str.charCodeAt(i += 6);
-        commentWhitespace();
-        switch (charCode) {
-          // export default ...
-          case 100/*d*/:
-            oExports.push('default');
-            return;
-
-          // export async? function*? name () {
-          case 97/*a*/:
-            charCode = str.charCodeAt(i += 5);
-            commentWhitespace();
-          // fallthrough
-          case 102/*f*/:
-            charCode = str.charCodeAt(i += 8);
-            commentWhitespace();
-            if (charCode === 42/***/) {
-              charCode = str.charCodeAt(++i);
-              commentWhitespace();
-            }
-            oExports.push(readToWsOrPunctuator(i));
-            return;
-
-          case 99/*c*/:
-            if (readToWsOrPunctuator(i + 1) === 'lass') {
-              charCode = str.charCodeAt(i += 5);
-              commentWhitespace();
-              oExports.push(readToWsOrPunctuator(i));
-              return;
-            }
-            i += 2;
-          // fallthrough
-
-          // export var/let/const name = ...(, name = ...)+
-          case 118/*v*/:
-          case 108/*l*/:
-            /*
-             * destructured initializations not currently supported (skipped for { or [)
-             * also, lexing names after variable equals is skipped (export var p = function () { ... }, q = 5 skips "q")
-             */
-            do {
-              charCode = str.charCodeAt(i += 3);
-              commentWhitespace();
-              name = readToWsOrPunctuator(i);
-              // stops on [ { destructurings
-              if (!name.length)
-                return;
-              oExports.push(name);
-              charCode = str.charCodeAt(i += name.length);
-              commentWhitespace();
-            } while (charCode === 44/*,*/);
-            return;
-
-          // export {...}
-          case 123/*{*/:
-            charCode = str.charCodeAt(++i);
-            commentWhitespace();
-            do {
-              name = readToWsOrPunctuator(i);
-              charCode = str.charCodeAt(i += name.length);
-              commentWhitespace();
-              // as
-              if (charCode === 97/*a*/) {
-                charCode = str.charCodeAt(i += 2);
-                commentWhitespace();
-                name = readToWsOrPunctuator(i);
-                charCode = str.charCodeAt(i += name.length);
-                commentWhitespace();
-              }
-              // ,
-              if (charCode === 44) {
-                charCode = str.charCodeAt(++i);
-                commentWhitespace();
-              }
-              oExports.push(name);
-              if (!charCode)
-                syntaxError();
-            } while (charCode !== 125/*}*/);
-          // fallthrough
-
-          // export *
-          case 42/***/:
-            charCode = str.charCodeAt(++i);
-            commentWhitespace();
-            if (charCode === 102 && str.slice(i + 1, i + 4) === 'rom') {
-              charCode = str.charCodeAt(i += 4);
-              readSourceString();
-            }
-        }
-      }
-    }
-  }
-
-
-  /*
-   * Helper functions
-   */
-
-  // seeks through whitespace, comments and multiline comments
-  function commentWhitespace () {
-    do {
-      if (charCode === 47/*/*/) {
-        const nextCharCode = str.charCodeAt(i + 1);
-        if (nextCharCode === 47/*/*/) {
-          charCode = nextCharCode;
-          i++;
-          lineComment();
-        }
-        else if (nextCharCode === 42/***/) {
-          charCode = nextCharCode;
-          i++;
-          blockComment();
-        }
-        else {
-          return;
-        }
-      }
-      else if (!isBrOrWs(charCode)) {
-        return;
-      }
-    } while (charCode = str.charCodeAt(++i));
-  }
-
-  function templateString () {
-    while (charCode = str.charCodeAt(++i)) {
-      if (charCode === 36/*$*/) {
-        charCode = str.charCodeAt(++i);
-        if (charCode === 123/*{*/) {
-          templateStack.push(templateDepth);
-          templateDepth = ++braceDepth;
-          return;
-        }
-      }
-      else if (charCode === 96/*`*/) {
-        return;
-      }
-      else if (charCode === 92/*\*/) {
-        charCode = str.charCodeAt(++i);
-      }
-    }
-    syntaxError();
-  }
-
-  function readSourceString () {
-    let start;
-    do {
-      if (charCode === 39/*'*/) {
-        start = i + 1;
-        singleQuoteString();
-        oImports.push({ s: start, e: i, d: -1 });
-        return;
-      }
-      if (charCode === 34/*"*/) {
-        start = i + 1;
-        doubleQuoteString();
-        oImports.push({ s: start, e: i, d: -1 });
-        return;
-      }
-    } while (charCode = str.charCodeAt(++i))
-    syntaxError();
-  }
-  function isBr () {
-    // (8232 <LS> and 8233 <PS> omitted for now)
-    return charCode === 10/*\n*/ || charCode === 13/*\r*/;
-  }
-
-  function isBrOrWs (charCode) {
-    return charCode > 8 && charCode < 14 || charCode === 32 || charCode === 160 || charCode === 65279;
-  }
-
-  function blockComment () {
-    charCode = str.charCodeAt(++i);
-    while (charCode) {
-      if (charCode === 42/***/) {
-        charCode = str.charCodeAt(++i);
-        if (charCode === 47/*/*/)
-          return;
-        continue;
-      }
-      charCode = str.charCodeAt(++i);
-    }
-  }
-
-  function lineComment () {
-    while (charCode = str.charCodeAt(++i)) {
-      if (isBr())
-        return;
-    }
-  }
-
-  function singleQuoteString () {
-    while (charCode = str.charCodeAt(++i)) {
-      if (charCode === 39/*'*/)
-        return;
-      if (charCode === 92/*\*/)
-        i++;
-      else if (isBr())
-        syntaxError();
-    }
-    syntaxError();
-  }
-
-  function doubleQuoteString () {
-    while (charCode = str.charCodeAt(++i)) {
-      if (charCode === 34/*"*/)
-        return;
-      if (charCode === 92/*\*/)
-        i++;
-      else if (isBr())
-        syntaxError();
-    }
-    syntaxError();
-  }
-
-  function regexCharacterClass () {
-    while (charCode = str.charCodeAt(++i)) {
-      if (charCode === 93/*]*/)
-        return;
-      if (charCode === 92/*\*/)
-        i++;
-      else if (isBr())
-        syntaxError();
-    }
-    syntaxError();
-  }
-
-  function regularExpression () {
-    do {
-      if (charCode === 47/*/*/)
-        return;
-      if (charCode === 91/*[*/)
-        regexCharacterClass();
-      else if (charCode === 92/*\*/)
-        i++;
-      else if (isBr())
-        syntaxError();
-    } while (charCode = str.charCodeAt(++i));
-    syntaxError();
-  }
-
-  function readPrecedingKeyword (endIndex) {
-    let startIndex = endIndex;
-    let nextChar = str.charCodeAt(startIndex);
-    while (nextChar && nextChar > 96/*a*/ && nextChar < 123/*z*/)
-      nextChar = str.charCodeAt(--startIndex);
-    // must be preceded by punctuator or whitespace
-    if (nextChar && !isBrOrWs(nextChar) && !isPunctuator(nextChar) || nextChar === 46/*.*/)
-      return '';
-    return str.slice(startIndex + 1, endIndex + 1);
-  }
-
-  function readToWsOrPunctuator (startIndex) {
-    let endIndex = startIndex;
-    let nextChar = str.charCodeAt(endIndex);
-    while (nextChar && !isBrOrWs(nextChar) && !isPunctuator(nextChar))
-      nextChar = str.charCodeAt(++endIndex);
-    return str.slice(startIndex, endIndex);
-  }
-
-  const expressionKeywords = {
-    case: 1,
-    debugger: 1,
-    delete: 1,
-    do: 1,
-    else: 1,
-    in: 1,
-    instanceof: 1,
-    new: 1,
-    return: 1,
-    throw: 1,
-    typeof: 1,
-    void: 1,
-    yield: 1,
-    await: 1
-  };
-  function isExpressionKeyword (lastTokenIndex) {
-    return expressionKeywords[readPrecedingKeyword(lastTokenIndex)];
-  }
-  function isParenKeyword  (lastTokenIndex) {
-    const precedingKeyword = readPrecedingKeyword(lastTokenIndex);
-    return precedingKeyword === 'while' || precedingKeyword === 'for' || precedingKeyword === 'if';
-  }
-  function isPunctuator (charCode) {
-    // 23 possible punctuator endings: !%&()*+,-./:;<=>?[]^{}|~
-    return charCode === 33 || charCode === 37 || charCode === 38 ||
-      charCode > 39 && charCode < 48 || charCode > 57 && charCode < 64 ||
-      charCode === 91 || charCode === 93 || charCode === 94 ||
-      charCode > 122 && charCode < 127;
-  }
-  function isExpressionPunctuator (charCode) {
-    return isPunctuator(charCode) && charCode !== 93/*]*/ && charCode !== 41/*)*/ && charCode !== 125/*}*/;
-  }
-  function isExpressionTerminator (lastTokenIndex) {
-    // detects:
-    // ; ) -1 finally
-    // as all of these followed by a { will indicate a statement brace
-    // in future we will need: "catch" (optional catch parameters)
-    //                         "do" (do expressions)
-    switch (str.charCodeAt(lastTokenIndex)) {
-      case 59/*;*/:
-      case 41/*)*/:
-      case NaN:
-        return true;
-      case 121/*y*/:
-        return readPrecedingKeyword(lastTokenIndex) === 'finally';
-    }
-    return false;
-  }
-
-  function syntaxError () {
-    // we just need the stack
-    // this isn't shown to users, only for diagnostics
-    throw new Error();
-  }
+  /* es-module-lexer 0.3.13 */
+  function parse(Q,B="@"){if(!A)return init.then(()=>parse(Q));const C=(A.__heap_base.value||A.__heap_base)+4*Q.length+-A.memory.buffer.byteLength;if(C>0&&A.memory.grow(Math.ceil(C/65536)),function(A,Q){const B=A.length;let C=0;for(;C<B;)Q[C]=A.charCodeAt(C++);}(Q,new Uint16Array(A.memory.buffer,A.sa(Q.length),Q.length+1)),!A.parse())throw Object.assign(new Error(`Parse error ${B}:${Q.slice(0,A.e()).split("\n").length}:${A.e()-Q.lastIndexOf("\n",A.e()-1)}`),{idx:A.e()});const E=[],g=[];for(;A.ri();)E.push({s:A.is(),e:A.ie(),d:A.id()});for(;A.re();)g.push(Q.slice(A.es(),A.ee()));return [E,g]}let A;const init=WebAssembly.compile((A=>"function"==typeof atob?Uint8Array.from(atob(A),A=>A.charCodeAt(0)):Buffer.from(A,"base64"))("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")).then(WebAssembly.instantiate).then(({exports:Q})=>{A=Q;});
 
   class WorkerShim {
     constructor(aURL, options = {}) {
@@ -716,8 +247,10 @@
       if (!esModuleShimsSrc)
         throw new Error('es-module-shims.js must be loaded with a script tag for WorkerShim support.');
 
+      options.importMap = options.importMap || emptyImportMap;
+
       const workerScriptUrl = createBlob(
-        `importScripts('${esModuleShimsSrc}');importShim.map=${JSON.stringify(options.importMap || {})};importShim('${new URL(aURL, baseUrl).href}').catch(e=>setTimeout(()=>{throw e}))`
+        `importScripts('${esModuleShimsSrc}');importShim.map=${JSON.stringify(options.importMap)};importShim('${new URL(aURL, baseUrl).href}').catch(e=>setTimeout(()=>{throw e}))`
       );
 
       return new Worker(workerScriptUrl, Object.assign({}, options, { type: undefined }));
@@ -727,46 +260,21 @@
   let id = 0;
   const registry = {};
 
-  // support browsers without dynamic import support (eg Firefox 6x)
-  let dynamicImport;
-  try {
-    dynamicImport = (0, eval)('u=>import(u)');
-  }
-  catch (e) {
-    if (typeof document !== 'undefined') {
-      self.addEventListener('error', e => importShim.e = e.error);
-      dynamicImport = blobUrl => {
-        const topLevelBlobUrl = createBlob(
-          `import*as m from'${blobUrl}';self.importShim.l=m;self.importShim.e=null`
-        );
-        const s = document.createElement('script');
-        s.type = 'module';
-        s.src = topLevelBlobUrl;
-        document.head.appendChild(s);
-        return new Promise((resolve, reject) => {
-          s.addEventListener('load', () => {
-            document.head.removeChild(s);
-            if (importShim.e)
-              return reject(importShim.e);
-            resolve(importShim.l);
-          });
-        });
-      };
-    }
-  }
-
-  async function loadAll (load, loaded) {
-    if (load.b || loaded[load.u])
+  async function loadAll (load, seen) {
+    if (load.b || seen[load.u])
       return;
-    loaded[load.u] = true;
+    seen[load.u] = 1;
     await load.L;
-    await Promise.all(load.d.map(dep => loadAll(dep, loaded)));
+    return Promise.all(load.d.map(dep => loadAll(dep, seen)));
   }
 
   async function topLevelLoad (url, source) {
+    await init;
     const load = getOrCreateLoad(url, source);
-    await loadAll(load, {});
-    resolveDeps(load, {});
+    const seen = {};
+    await loadAll(load, seen);
+    lastLoad = undefined;
+    resolveDeps(load, seen);
     const module = await dynamicImport(load.b);
     // if the top-level load is a shell, run its update function
     if (load.s)
@@ -774,46 +282,50 @@
     return module;
   }
 
-  async function importShim (id) {
-    const parentUrl = arguments.length === 1 ? baseUrl : (id = arguments[1], arguments[0]);
-    return topLevelLoad(await resolve(id, parentUrl));
+  async function importShim$1 (id, parentUrl) {
+    return topLevelLoad(await resolve(id, parentUrl || baseUrl));
   }
 
-  self.importShim = importShim;
+  self.importShim = importShim$1;
 
   const meta = {};
   const wasmModules = {};
 
-  Object.defineProperties(importShim, {
-    map: { value: {}, writable: true },
+  const edge = navigator.userAgent.match(/Edge\/\d\d\.\d+$/);
+
+  Object.defineProperties(importShim$1, {
+    map: { value: emptyImportMap, writable: true },
     m: { value: meta },
     w: { value: wasmModules },
     l: { value: undefined, writable: true },
     e: { value: undefined, writable: true }
   });
+  importShim$1.fetch = url => fetch(url);
 
-  async function resolveDeps (load, seen) {
-    if (load.b)
+  let lastLoad;
+  function resolveDeps (load, seen) {
+    if (load.b || !seen[load.u])
       return;
-    seen[load.u] = true;
+    seen[load.u] = 0;
 
-    let source = load.S;
-    let resolvedSource;
+    for (const dep of load.d)
+      resolveDeps(dep, seen);
 
-    for (const depLoad of load.d)
-      if (!seen[depLoad.u])
-        resolveDeps(depLoad, seen);
-    if (!load.a[0].length) {
-      resolvedSource = source;
+    // "execution"
+    const source = load.S;
+    // edge doesnt execute sibling in order, so we fix this up by ensuring all previous executions are explicit dependencies
+    let resolvedSource = edge && lastLoad ? `import '${lastLoad}';` : '';
+
+    const [imports] = load.a;
+
+    if (!imports.length) {
+      resolvedSource += source;
     }
     else {
       // once all deps have loaded we can inline the dependency resolution blobs
       // and define this blob
-      let lastIndex = 0;
-      resolvedSource = '';
-      let depIndex = 0;
-      for (let i = 0; i < load.a[0].length; i++) {
-        const { s: start, e: end, d: dynamicImportIndex } = load.a[0][i];
+      let lastIndex = 0, depIndex = 0;
+      for (const { s: start, e: end, d: dynamicImportIndex } of imports) {
         // dependency source replacements
         if (dynamicImportIndex === -1) {
           const depLoad = load.d[depIndex++];
@@ -850,14 +362,22 @@
         }
         // dynamic import
         else {
-          resolvedSource += source.slice(lastIndex, start) + 'importShim' + source.slice(start + 6, end) + JSON.stringify(load.r) + ', ';
+          resolvedSource += source.slice(lastIndex, dynamicImportIndex + 6) + 'Shim(' + source.slice(start, end) + ', ' + JSON.stringify(load.r);
           lastIndex = end;
         }
       }
+
       resolvedSource += source.slice(lastIndex);
     }
 
-    load.b = createBlob(resolvedSource + '\n//# sourceURL=' + load.r);
+    let sourceMappingResolved = '';
+    const sourceMappingIndex = resolvedSource.lastIndexOf('//# sourceMappingURL=');
+    if (sourceMappingIndex > -1) {
+      const sourceMappingEnd = resolvedSource.indexOf('\n',sourceMappingIndex);
+      const sourceMapping = resolvedSource.slice(sourceMappingIndex, sourceMappingEnd > -1 ? sourceMappingEnd : undefined);
+      sourceMappingResolved = `\n//# sourceMappingURL=` + resolveUrl(sourceMapping.slice(21), load.r);
+    }
+    load.b = lastLoad = createBlob(resolvedSource + sourceMappingResolved + '\n//# sourceURL=' + load.r);
     load.S = undefined;
   }
 
@@ -887,17 +407,34 @@
       s: undefined,
     };
 
+    if (url.startsWith('std:'))
+      return Object.assign(load, {
+        r: url,
+        f: resolvedPromise,
+        L: resolvedPromise,
+        b: url
+      });
+
     load.f = (async () => {
       if (!source) {
-        const res = await fetch(url);
+        const res = await importShim$1.fetch(url);
         if (!res.ok)
           throw new Error(`${res.status} ${res.statusText} ${res.url}`);
 
         load.r = res.url;
 
-        if (res.url.endsWith('.wasm')) {
-          const module = wasmModules[url] = await (WebAssembly.compileStreaming ? WebAssembly.compileStreaming(res) : WebAssembly.compile(await res.arrayBuffer()));
-
+        const contentType = res.headers.get('content-type');
+        if (contentType.match(/^(text|application)\/(x-)?javascript(;|$)/)) {
+          source = await res.text();
+        }
+        else if (contentType.match(/^application\/json(;|$)/)) {
+          source = `export default JSON.parse(${JSON.stringify(await res.text())})`;
+        }
+        else if (contentType.match(/^text\/css(;|$)/)) {
+          source = `const s=new CSSStyleSheet();s.replaceSync(${JSON.stringify(await res.text())});export default s`;
+        }
+        else if (contentType.match(/^application\/wasm(;|$)/)) {
+          const module = wasmModules[url] = await WebAssembly.compile(await res.arrayBuffer());
           let deps = WebAssembly.Module.imports ? WebAssembly.Module.imports(module).map(impt => impt.module) : [];
 
           const aDeps = [];
@@ -922,24 +459,26 @@
             depStrs.map((depStr, idx) => `${depStr}:m${idx},`).join('') +
             `}).exports;` +
             load.a[1].map(name => name === 'default' ? `export default exports.${name}` : `export const ${name}=exports.${name}`).join(';');
-
           return deps;
         }
-
-        source = await res.text();
-        if (res.url.endsWith('.json'))
-          source = `export default JSON.parse(${JSON.stringify(source)})`;
+        else {
+          throw new Error(`Unknown Content-Type "${contentType}"`);
+        }
       }
-      load.a = analyzeModuleSyntax(source);
-      if (load.a[2])
-        importShim.err = [source, load.a[2]];
+      try {
+        load.a = parse(source, load.u);
+      }
+      catch (e) {
+        console.warn(e);
+        load.a = [[], []];
+      }
       load.S = source;
       return load.a[0].filter(d => d.d === -1).map(d => source.slice(d.s, d.e));
     })();
 
     load.L = load.f.then(async deps => {
       load.d = await Promise.all(deps.map(async depId => {
-        const depLoad = getOrCreateLoad(await resolve(depId, load.r));
+        const depLoad = getOrCreateLoad(await resolve(depId, load.r || load.u));
         await depLoad.f;
         return depLoad;
       }));
@@ -949,40 +488,32 @@
   }
 
   let importMapPromise;
-  if (typeof document !== 'undefined') {
-    const scripts = document.getElementsByTagName('script');
-    for (let i = 0; i < scripts.length; i++) {
-      const script = scripts[i];
-      if (script.type === 'importmap-shim' && !importMapPromise) {
-        if (script.src) {
-          importMapPromise = (async function () {
-            importShim.map = parseImportMap(await (await fetch(script.src)).json(), script.src.slice(0, script.src.lastIndexOf('/') + 1));
-          })();
-        }
-        else {
-          importShim.map = parseImportMap(JSON.parse(script.innerHTML), baseUrl);
-        }
-      }
-      // this works here because there is a .then before resolve
-      else if (script.type === 'module-shim') {
-        if (script.src)
-          topLevelLoad(script.src);
-        else
-          topLevelLoad(`${baseUrl}?${id++}`, script.innerHTML);
-      }
-    }
+
+  if (hasDocument) {
+    // preload import maps
+    for (const script of document.querySelectorAll('script[type="importmap-shim"][src]'))
+      script._f = fetch(script.src);
+    // load any module scripts
+    for (const script of document.querySelectorAll('script[type="module-shim"]'))
+      topLevelLoad(script.src || `${baseUrl}?${id++}`, script.src ? null : script.innerHTML);
   }
 
   async function resolve (id, parentUrl) {
-    parentUrl = parentUrl || baseUrl;
+    if (!importMapPromise) {
+      importMapPromise = resolvedPromise;
+      if (hasDocument)
+        for (const script of document.querySelectorAll('script[type="importmap-shim"]')) {
+          importMapPromise = importMapPromise.then(async () => {
+            importShim$1.map = await resolveAndComposeImportMap(script.src ? await (await (script._f || fetch(script.src))).json() : JSON.parse(script.innerHTML), script.src || baseUrl, importShim$1.map);
+          });
+        }
+    }
+    await importMapPromise;
+    return resolveImportMap(importShim$1.map, resolveIfNotPlainOrUrl(id, parentUrl) || id, parentUrl) || throwUnresolved(id, parentUrl);
+  }
 
-    if (importMapPromise)
-      return importMapPromise
-      .then(function () {
-        return resolveImportMap(id, parentUrl, importShim.map);
-      });
-
-    return resolveImportMap(id, parentUrl, importShim.map);
+  function throwUnresolved (id, parentUrl) {
+    throw Error("Unable to resolve specifier '" + id + (parentUrl ? "' from " + parentUrl : "'"));
   }
 
   self.WorkerShim = WorkerShim;

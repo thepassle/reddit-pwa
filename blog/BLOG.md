@@ -1,4 +1,11 @@
-# On The Bleeding Edge 
+---
+title: Going Buildless
+published: true
+description: Making projects without a build step, using web standards and having fun.
+tags: buildless, webcomponents, litelement, importmaps
+---
+
+# Going Buildless 
 
 Hi all 👋
 
@@ -8,8 +15,8 @@ On top of that, there recently has been a lot of discussion around what I like t
 
 I also like to imagine this blogpost as somewhat of an homage to a couple of really awesome people in the community who are making some really awesome things possible, as well as a showcase of some exciting new technologies and standards, and I'll be linking to all that good stuff as we move along.
 
-Do note that this won't be a step-by-step tutorial, but if you want to check out the code, you can find the finished project on [github](). Our end result should look something like this:
-![app](app.png)
+Do note that this won't be a step-by-step tutorial, but if you want to check out the code, you can find the finished project on [github](https://github.com/thepassle/reddit-pwa). Our end result should look something like this:
+![app](https://raw.githubusercontent.com/thepassle/reddit-pwa/master/blog/app.png)
 
 So let's dive straight in and quickly install _a few_ dependencies:
 
@@ -17,7 +24,7 @@ So let's dive straight in and quickly install _a few_ dependencies:
 npm i @babel/core babel-loader @babel/preset-env @babel/preset-react webpack webpack-cli react react-dom redux react-redux html-webpack-plugin are-you-tired-yet html-loader webpack-dev-server
 ```
 
-I'm kidding. We're not gonna use any of that. We're going to try and avoid as much tooling as we can, and keep the entry barrier low.
+I'm kidding. We're not gonna use any of that. We're going to try and avoid as much tooling/dependencies as we can, and keep the entry barrier low.
 
 What we _will_ be using is:
 
@@ -27,8 +34,8 @@ What we _will_ be using is:
 - [`@vaadin/router`](https://github.com/vaadin/vaadin-router)
   Vaadin router is a really small (< 7kb) router that has an *awesome* developer experience, and I cannot recommend enough.
 
-- [`@pika/web`](https://github.com/pikapkg/web)
-  Pika is going to help us get our modules together for easy development.
+- [`snowpack`](https://github.com/pikapkg/snowpack)
+  Snowpack is going to help us get our modules together for easy development.
   
 - [`es-dev-server`](https://open-wc.org/developing/es-dev-server.html)
   A simple dev server for modern web development workflows, made by us at [open-wc](https://www.open-wc.org). Although any http server will do; feel free to bring your own.
@@ -39,23 +46,23 @@ So let's go ahead and install our dependencies:
 
 ```bash
 npm i -S lit-element @vaadin/router
-npm i -D @pika/web es-dev-server
+npm i -D snowpack es-dev-server
 ```
 
-We'll also add a `postinstall` hook to our `package.json` that's going to run Pika for us:
+We'll also add a `postinstall` hook to our `package.json` that's going to run Snowpack for us:
 
 ```json
   "scripts": {
     "start": "es-dev-server",
-    "postinstall": "pika-web"
+    "prepare": "snowpack"
   }
 ```
 
-## 🐭 Pika
+## 🐭 Pika - Snowpack
 
 Pika is a project by [Fred K. Schott](https://twitter.com/FredKSchott), that aims to bring that nostalgic, 2014 simplicity to 2019 web development. Fred is up to all sorts of awesome stuff, for one, he made [pika.dev](https://www.pika.dev/), which lets you easily search for modern JavaScript packages on npm. He also recently gave his talk [Reimagining the Registry](https://www.youtube.com/watch?v=2Wwx-lF5NhE) at DinosaurJS 2019, which I highly recommend you watch.
 
-`@pika/web` takes things even one step further. If we run `pika-web`, it'll install our dependencies as single javascript files to a new `web_modules/` directory. If your dependency exports an ES "module" entrypoint in its `package.json` manifest, Pika supports it. If you have any transitive dependencies, Pika will create separate chunks for any shared code among your dependencies. Easy peasy lemon squeezy.
+`snowpack` takes things even one step further. If we run `snowpack`, it'll install our dependencies as single javascript files to a new `web_modules/` directory. If your dependency exports an ES "module" entrypoint in its `package.json` manifest, Snowpack supports it. If you have any transitive dependencies, Snowpack will create separate chunks for any shared code among your dependencies. Easy peasy lemon squeezy. It even supports [tree shaking](https://twitter.com/pikapkg/status/1214693540938145792)!
 
 What this means, is that in our case our output will look something like:
 
@@ -105,7 +112,7 @@ customElements.define('reddit-pwa-app', RedditPwaApp);
 
 We're off to a great start. Let's try and see how this looks in the browser so far, so lets start our server, open the browser and... What's this? An error?
 
-![error](bare-module-error.png)
+![error](https://raw.githubusercontent.com/thepassle/reddit-pwa/master/blog/bare-module-error.png)
 
 Oh boy. 
 
@@ -153,7 +160,7 @@ Alright, we're going to skip ahead in time a little bit. We've got our dependenc
 
 Since we're making this app so we can read reddit threads on the airplane it would be _great_ if our application worked offline, and if we could somehow save some posts to read.
 
-![service worker](./service-worker.jpg)
+![service worker](https://raw.githubusercontent.com/thepassle/reddit-pwa/master/blog/service-worker.jpg)
 
 Service workers are a kind of JavaScript Worker that runs in the background. You can visualize it as sitting in between the web page, and the network. Whenever your web page makes a request, it goes through the service worker first. This means that we can intercept the request, and do stuff with it! For example; we can let the request go through to the network to get a response, and cache it when it returns so we can use that cached data later when we might be offline. We can also use a service worker to _precache_ our assets. What this means is that we can precache any critical assets our application may need in order to work offline. If we have no network connection, we can simply fall back to the assets we cached, and still have a working (albeit offline) application.
 
@@ -175,7 +182,7 @@ So let's go ahead and implement a service worker. In our `index.html`, we'll add
   </script>
 ```
 
-We'll also add a [`sw.js`]() file to the root of our project. So we're about to precache the assets of our app, and this is where Pika just made life really easy for us. If you'll take a look at the install handler in the service worker file:
+We'll also add a [`sw.js`]() file to the root of our project. So we're about to precache the assets of our app, and this is where Snowpack just made life really easy for us. If you'll take a look at the install handler in the service worker file:
 
 ```js
 self.addEventListener('install', (event) => {
@@ -243,11 +250,11 @@ async saveForOffline() {
 
 So now if we click the 'save for offline' button, and we go to the developer tools 'Application' tab, we can see a `kv-storage:saved-posts` that holds the JSON data for this post:
 
-![save](save.png)
+![save](https://raw.githubusercontent.com/thepassle/reddit-pwa/master/blog/save.png)
 
 And if we go back to our search page, we'll have a list of saved posts with the post we just saved:
 
-![saved](saved.png)
+![saved](https://raw.githubusercontent.com/thepassle/reddit-pwa/master/blog/saved.png)
 
 ### 🔮 Polyfilling
 
@@ -257,7 +264,7 @@ First things first, lets install the kv-storage-polyfill:
 
 `npm i -S kv-storage-polyfill`
 
-> Note that our `postinstall` hook will run Pika for us again
+> Note that our `prepare` hook will run Snowpack for us again
 
 And lets add the following to our import map in our `index.html`:
 
@@ -295,7 +302,7 @@ This is what will happen:
 
 ## 🎉 Conclusion
 
-And we should now have a simple, functioning PWA, with minimal dependencies. There are a few nitpicks to this project that we could complain about, and they'd all likely be fair. For example; we probably could've gone without using Pika, but it does make life really easy for us. You could have made the same argument about adding a simple Webpack configuration, but you'd have missed the point. The point here is to make a fun application, while using some of the latest features, drop some buzzwords, and have a low barrier for entry. As Fred Schott would say: "In 2019, you should use a bundler because you want to, not because you need to."
+And we should now have a simple, functioning PWA, with minimal dependencies. There are a few nitpicks to this project that we could complain about, and they'd all likely be fair. For example; we probably could've gone without using Snowpack, but it does make life really easy for us. You could have made the same argument about adding a simple Webpack configuration, but you'd have missed the point. The point here is to make a fun application, while using some of the latest features, drop some buzzwords, and have a low barrier for entry. As Fred Schott would say: "In 2019, you should use a bundler because you want to, not because you need to."
 
 If you're interested in nitpicking, however, you can read [this great discussion](https://github.com/lukejacksonn/perflink/issues/15) about using Webpack vs Pika vs buildless, and you'll get some great insights from [Sean Larkinn](https://twitter.com/TheLarkInn) of the Webpack core team himself, as well as [Fred K. Schott](https://twitter.com/FredKSchott), creator of Pika.
 

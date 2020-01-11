@@ -2625,4 +2625,3 @@ LitElement['finalized'] = true;
 LitElement.render = render$1;
 
 export { CSSResult, LitElement, SVGTemplateResult, TemplateResult, UpdatingElement, css, customElement, defaultConverter, eventOptions, html, notEqual, property, query, queryAll, supportsAdoptingStyleSheets, svg, unsafeCSS };
-//# sourceMappingURL=lit-element.js.map

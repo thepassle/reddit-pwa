@@ -2715,4 +2715,3 @@ usageStatistics();
 Router.NavigationTrigger = {POPSTATE, CLICK};
 
 export { Resolver, Router };
-//# sourceMappingURL=router.js.map
